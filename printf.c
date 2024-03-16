@@ -333,8 +333,10 @@ static size_t _ntoa_long_long(out_fct_type out, char* buffer, size_t idx, size_t
 #if defined(PRINTF_SUPPORT_FLOAT)
 #if defined(PRINTF_SUPPORT_DOUBLE)
   #define FLOAT_SIZE_TYPE double
+  #define MAX_TYPE DBL_MAX
 #else
   #define FLOAT_SIZE_TYPE float
+  #define MAX_TYPE FLT_MAX
 #endif
 #if defined(PRINTF_SUPPORT_EXPONENTIAL)
 // forward declaration so that _ftoa can switch to exp notation for values > PRINTF_MAX_FLOAT
@@ -354,9 +356,9 @@ static size_t _ftoa(out_fct_type out, char* buffer, size_t idx, size_t maxlen, F
   // test for special values
   if (value != value)
     return _out_rev(out, buffer, idx, maxlen, "nan", 3, width, flags);
-  if (value < -DBL_MAX)
+  if (value < -MAX_TYPE)
     return _out_rev(out, buffer, idx, maxlen, "fni-", 4, width, flags);
-  if (value > DBL_MAX)
+  if (value > MAX_TYPE)
     return _out_rev(out, buffer, idx, maxlen, (flags & FLAGS_PLUS) ? "fni+" : "fni", (flags & FLAGS_PLUS) ? 4U : 3U, width, flags);
 
   // test for very large values
@@ -473,7 +475,7 @@ static size_t _ftoa(out_fct_type out, char* buffer, size_t idx, size_t maxlen, F
 static size_t _etoa(out_fct_type out, char* buffer, size_t idx, size_t maxlen, double value, unsigned int prec, unsigned int width, unsigned int flags)
 {
   // check for NaN and special values
-  if ((value != value) || (value > DBL_MAX) || (value < -DBL_MAX)) {
+  if ((value != value) || (value > MAX_TYPE) || (value < -MAX_TYPE)) {
     return _ftoa(out, buffer, idx, maxlen, value, prec, width, flags);
   }
 
@@ -764,7 +766,7 @@ static int _vsnprintf(out_fct_type out, char* buffer, const size_t maxlen, const
       case 'f' :
       case 'F' :
         if (*format == 'F') flags |= FLAGS_UPPERCASE;
-        idx = _ftoa(out, buffer, idx, maxlen, va_arg(va, double), precision, width, flags);
+        idx = _ftoa(out, buffer, idx, maxlen, va_arg(va, FLOAT_SIZE_TYPE), precision, width, flags);
         format++;
         break;
 #if defined(PRINTF_SUPPORT_EXPONENTIAL)
